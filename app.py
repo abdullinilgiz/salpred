@@ -1,48 +1,46 @@
 import streamlit as st
 
-LOCATIONS = [
-    'Москва',
-    'Московская область',
-    'Санкт-Петербург',
-    'Ленинградская область',
-    'Оренбургская область',
-    'Саратов',
-    'Тюмень',
-    'Екатеринбург',
-    'Воронеж',
-    'Казань',
-    'Краснодар',
-]
+from processing.feature import get_salary
+from processing.feature import (
+    LOCATION_INDEX, SCHEDULE_INDEX, EDUCATION_INDEX, EXP_INDEX)
 
-SCHEDULES = [
-    'полный рабочий день',
-    'сменный график',
-    'вахта',
-    'свободный график',
-    'частичная занятость',
-]
 
-EDUCATIONS = [
-    'любое',
-    'среднее профессиональное',
-    'высшее',
-    'среднее',
-    'неполное высшее',
-]
+LOCATIONS = LOCATION_INDEX.keys()
+SCHEDULES = SCHEDULE_INDEX.keys()
+EDUCATIONS = EDUCATION_INDEX.keys()
+EXPERIENCES = EXP_INDEX.keys()
 
-st.title("Демо-версия сервиса предсказания зарплат")
 
-position = st.text_input("Профессия")
-st.write(f'Ваша профессия - :red[**{position}**]')
-
-education = st.radio('Образование', EDUCATIONS)
+st.title("Cервис предсказания зарплат")
 
 location = st.selectbox('Регион или город федерального значения', LOCATIONS)
-st.write(f'Выбраный регион -  :green[**{location}**]')
-
+position = st.text_input("Профессия")
+education = st.radio('Образование', EDUCATIONS)
 schedule = st.radio('Выберите график работы:', SCHEDULES)
-st.write(f'Вы выбрали - :blue[**{schedule}**]')
+experience = st.radio('Выберите опыт работы:', EXPERIENCES)
 
-str_skills = st.text_input("Введите до 10 навыков, через запятую", value='')
+
+str_skills = st.text_input("Укажите ваши навыки через запятую", value='')
 skills = str_skills.split(", ")
+
+
+st.write(f'Выбраный регион -  :green[**{location}**]')
+st.write(f'Ваша профессия - :red[**{position}**]')
+st.write(f'Ваше образование - :blue[**{education}**]')
+st.write(f'Вы выбрали - :blue[**{schedule}**]')
+st.write(f'Ваш опыт - :blue[**{experience}**]')
 st.write(f'Выбранные навыки - :blue[**{skills}**]')
+
+button_pressed = st.button("Получить предсказание зарплаты")
+
+if button_pressed:
+    predicted_salary = get_salary(
+        location,
+        position,
+        education,
+        schedule,
+        experience,
+        skills,
+        )
+
+    st.write(f'Предлагаемая зарплата {int(round(predicted_salary, -3))}')
