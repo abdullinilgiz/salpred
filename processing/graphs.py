@@ -1,50 +1,54 @@
-import math
-
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
+import seaborn as sns
+
+labels = ['work_skills', 'custom_position', 'city_id', 'schedule',
+          'education_name', 'required_experience']
+human_labels = ['Навыки', 'Должность', 'Регион', 'График работы',
+                'Образовние', 'Опыт', ]
 
 
-def softmax(vec, temperature):
-    """
-    turn vec into normalized probability
-    """
-    sum_exp = sum(math.exp(x/temperature) for x in vec)
-    return [math.exp(x/temperature)/sum_exp for x in vec]
-
-
-def get_percentage_graph(vacancies, model):
+def get_impacts(vacancies, model):
     vacancie = vacancies.loc[0]
-    labels = vacancie.keys()
-    feature_contribution = []
+    feature_impacts = []
 
     for label in labels:
         indexes = [index for index, col in enumerate(
             model.feature_names_in_) if label in col]
         feature_coefs = model.coef_[indexes]
-        feature_vec = vacancie.iloc[indexes].values
-        feature_contribution.append(feature_vec.dot(feature_coefs))
+        feature_vec = vacancie.values[indexes]
+        feature_impacts.append(feature_vec.dot(feature_coefs))
 
-    feature_contribution = np.abs(np.array(feature_contribution))
+    return np.array(feature_impacts)
 
-    indexes = np.argwhere(feature_contribution != 0).flatten()
-    indexes_zero = np.argwhere(feature_contribution == 0).flatten()
 
-    scaler = MinMaxScaler()
-    scaler.fit(feature_contribution[indexes].reshape(-1, 1))
-
-    data = scaler.transform(feature_contribution[indexes].reshape(-1, 1))
-    data = data.reshape(1, -1).flatten()
-
-    data_probs = softmax(data, 1)
-
-    if len(indexes_zero) != 0:
-        data_probs.insert(indexes_zero, 0)
-
-    data_probs = np.array(data_probs)
-
-    colors = sns.color_palette('pastel')[0:5]
+def get_percentage_graph(impacts):
+    impacts = np.abs(impacts)
+    contrib_ratios = np.array(impacts / sum(impacts))
     fig, ax = plt.subplots()
-    ax.pie(data_probs, labels=labels, colors=colors, autopct='%.0f%%')
+    ax.pie(contrib_ratios,
+           labels=human_labels,
+           colors=sns.color_palette('pastel')[0:6],
+           autopct='%.0f%%'
+           )
     return fig
+
+
+def get_histogram(impacts):
+    impacts = np.abs(impacts)
+    palette1 = ["blue", "green", "red", "orange", "purple", "brown"]
+    df_hist = pd.DataFrame({
+        'labels': human_labels,
+        'feature_contribution': impacts
+        })
+    plt.figure(figsize=(8, 6))
+    sns.barplot(df_hist,
+                x="labels",
+                y="feature_contribution",
+                fill=True,
+                palette=palette1)
+    plt.title("График вкладов различных признаков")
+    plt.xlabel("Признаки")
+    plt.ylabel("Вклад")
+    return plt

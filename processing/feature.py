@@ -1,11 +1,10 @@
-from pathlib import Path
 import os
+import pickle
+from pathlib import Path
 
 import fasttext
 import numpy as np
-import pickle
 import pandas as pd
-
 
 LOCATION_INDEX = {
     'Москва': 1,
@@ -59,24 +58,6 @@ EXP_INDEX = {
     'От 3 до 6 лет': 4,
 }
 
-# skill_names = [f'skill_{i}' for i in range(300)]
-# position_names = [f'position_{i}' for i in range(300)]
-# other_names = ['city_id_1', 'city_id_10', 'city_id_16', 'city_id_174',
-#                'city_id_2', 'city_id_268', 'city_id_3', 'city_id_36',
-#                'city_id_57', 'city_id_6', 'schedule_вахта',
-#                'schedule_полный рабочий день', 'schedule_свободный график',
-#                'schedule_сменный график', 'schedule_удаленная работа',
-#                'schedule_частичная занятость', 'education_name_высшее',
-#                'education_name_высшее (бакалавр)', 'education_name_любое',
-#                'education_name_неполное высшее', 'education_name_среднее',
-#                'education_name_среднее профессиональное',
-#                'required_experience_Более 6 лет',
-#                'required_experience_Не указано',
-#                'required_experience_Нет опыта',
-#                'required_experience_От 1 года до 3 лет',
-#                'required_experience_От 3 до 6 лет']
-# columns_names = skill_names + position_names + other_names
-
 ft_path = '/home/ilgiz/dev/rabotaru/data/cc.ru.300.bin'
 ft = fasttext.load_model(ft_path)
 ft.get_dimension()
@@ -112,7 +93,7 @@ def preprocess_features(location: str, position: str,
     education_vec = [0] * len(EDUCATION_INDEX)
     education_vec[EDUCATION_INDEX[education]] = 1
     experience_vec = [0] * len(EXP_INDEX)
-    experience_vec[EXP_INDEX[experience]]
+    experience_vec[EXP_INDEX[experience]] = 1
 
     features = np.concatenate((skill_vec, position_vec), axis=0).tolist()
     features += location_vec + schedule_vec + education_vec + experience_vec

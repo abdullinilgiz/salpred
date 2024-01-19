@@ -1,11 +1,9 @@
 import streamlit as st
 
-from processing.feature import (print_column_coef, get_model,
-                                preprocess_features, get_salary)
-from processing.feature import (
-    LOCATION_INDEX, SCHEDULE_INDEX, EDUCATION_INDEX, EXP_INDEX)
-from processing.graphs import get_percentage_graph
-
+from processing.feature import (EDUCATION_INDEX, EXP_INDEX, LOCATION_INDEX,
+                                SCHEDULE_INDEX, get_model, get_salary,
+                                preprocess_features)
+from processing.graphs import get_histogram, get_impacts, get_percentage_graph
 
 LOCATIONS = LOCATION_INDEX.keys()
 SCHEDULES = SCHEDULE_INDEX.keys()
@@ -49,5 +47,9 @@ if button_pressed:
 
     st.write(f'Предлагаемая зарплата {int(round(predicted_salaries[0], -3))}')
 
-    percentage_graph = get_percentage_graph(vacancies, model)
+    feature_impacts = get_impacts(vacancies, model)
+    percentage_graph = get_percentage_graph(feature_impacts)
+    hist = get_histogram(feature_impacts)
+
     st.pyplot(percentage_graph)
+    st.pyplot(hist)
