@@ -1,8 +1,10 @@
 import streamlit as st
 
-from processing.feature import get_salary
+from processing.feature import (print_column_coef, get_model,
+                                preprocess_features, get_salary)
 from processing.feature import (
     LOCATION_INDEX, SCHEDULE_INDEX, EDUCATION_INDEX, EXP_INDEX)
+from processing.graphs import get_percentage_graph
 
 
 LOCATIONS = LOCATION_INDEX.keys()
@@ -32,9 +34,10 @@ st.write(f'Ваш опыт - :blue[**{experience}**]')
 st.write(f'Выбранные навыки - :blue[**{skills}**]')
 
 button_pressed = st.button("Получить предсказание зарплаты")
+model = get_model()
 
 if button_pressed:
-    predicted_salary = get_salary(
+    vacancies = preprocess_features(
         location,
         position,
         education,
@@ -42,5 +45,9 @@ if button_pressed:
         experience,
         skills,
         )
+    predicted_salaries = get_salary(model, vacancies)
 
-    st.write(f'Предлагаемая зарплата {int(round(predicted_salary, -3))}')
+    st.write(f'Предлагаемая зарплата {int(round(predicted_salaries[0], -3))}')
+
+    percentage_graph = get_percentage_graph(vacancies, model)
+    st.pyplot(percentage_graph)

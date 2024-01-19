@@ -59,32 +59,34 @@ EXP_INDEX = {
     'От 3 до 6 лет': 4,
 }
 
-skill_names = [f'skill_{i}' for i in range(300)]
-position_names = [f'position_{i}' for i in range(300)]
-other_names = ['city_id_1', 'city_id_10', 'city_id_16', 'city_id_174',
-               'city_id_2', 'city_id_268', 'city_id_3', 'city_id_36',
-               'city_id_57', 'city_id_6', 'schedule_вахта',
-               'schedule_полный рабочий день', 'schedule_свободный график',
-               'schedule_сменный график', 'schedule_удаленная работа',
-               'schedule_частичная занятость', 'education_name_высшее',
-               'education_name_высшее (бакалавр)', 'education_name_любое',
-               'education_name_неполное высшее', 'education_name_среднее',
-               'education_name_среднее профессиональное',
-               'required_experience_Более 6 лет',
-               'required_experience_Не указано',
-               'required_experience_Нет опыта',
-               'required_experience_От 1 года до 3 лет',
-               'required_experience_От 3 до 6 лет']
-columns_names = skill_names + position_names + other_names
+# skill_names = [f'skill_{i}' for i in range(300)]
+# position_names = [f'position_{i}' for i in range(300)]
+# other_names = ['city_id_1', 'city_id_10', 'city_id_16', 'city_id_174',
+#                'city_id_2', 'city_id_268', 'city_id_3', 'city_id_36',
+#                'city_id_57', 'city_id_6', 'schedule_вахта',
+#                'schedule_полный рабочий день', 'schedule_свободный график',
+#                'schedule_сменный график', 'schedule_удаленная работа',
+#                'schedule_частичная занятость', 'education_name_высшее',
+#                'education_name_высшее (бакалавр)', 'education_name_любое',
+#                'education_name_неполное высшее', 'education_name_среднее',
+#                'education_name_среднее профессиональное',
+#                'required_experience_Более 6 лет',
+#                'required_experience_Не указано',
+#                'required_experience_Нет опыта',
+#                'required_experience_От 1 года до 3 лет',
+#                'required_experience_От 3 до 6 лет']
+# columns_names = skill_names + position_names + other_names
 
 ft_path = '/home/ilgiz/dev/rabotaru/data/cc.ru.300.bin'
 ft = fasttext.load_model(ft_path)
 ft.get_dimension()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-model_path = os.path.join(BASE_DIR, 'models', 'ridge_model.pkl')
+model_path = os.path.join(BASE_DIR, 'models', 'positive_model.pkl')
 with open(model_path, 'rb') as model_file:
     model = pickle.load(model_file)
+
+columns_names = model.feature_names_in_
 
 
 def skills_embedding(skills: list[str]):
@@ -97,10 +99,10 @@ def skills_embedding(skills: list[str]):
     return sentence_vectors
 
 
-def get_salary(location: str, position: str,
-               education: str, schedule: str,
-               experience: str, skills: list[str]
-               ):
+def preprocess_features(location: str, position: str,
+                        education: str, schedule: str,
+                        experience: str, skills: list[str]
+                        ):
     skill_vec = skills_embedding(skills)
     position_vec = ft.get_word_vector(position)
     location_vec = [0] * len(LOCATION_INDEX)
@@ -115,4 +117,22 @@ def get_salary(location: str, position: str,
     features = np.concatenate((skill_vec, position_vec), axis=0).tolist()
     features += location_vec + schedule_vec + education_vec + experience_vec
     df = pd.DataFrame([features,], columns=columns_names)
-    return model.predict(df)[0]
+    return df
+
+
+def get_model():
+    return model
+
+
+def get_salary(model, df):
+    return model.predict(df)
+
+
+def print_column_coef():
+    coefs = model.coef_
+    feature_names = model.feature_names_in_
+    for i in range(600, len(feature_names)):
+        print(coefs[i], feature_names[i], columns_names[i])
+    print(coefs[-1])
+    print(len(feature_names))
+    print(len(coefs))
